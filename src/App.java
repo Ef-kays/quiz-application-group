@@ -18,11 +18,11 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Main entrypoint and UI coordinator for the Quiz Application.
+ * Main entrypoint, UI coordinator, and domain container for the Quiz Application.
  * This class houses the JavaFX UI layout systems, screen-switching methods,
- * and standard Javadoc specifications. It also contains nested classes for the
- * Question model, Grade definitions, and QuizEngine logic to keep the application
- * modular yet self-contained within a single source file.
+ * nested modular classes (Question, Grade, QuizEngine), and even the complete
+ * automated Junit test suite (AppTest) to ensure the entire application can be
+ * maintained, compiled, and tested as a single flat source file.
  *
  * @author Group 2
  * @version 1.0
@@ -64,7 +64,7 @@ public class App extends Application {
 
         Scene scene = new Scene(rootContainer, DEFAULT_WIDTH, DEFAULT_HEIGHT);
         
-        // Load external stylesheet
+        // Load the flat styles.css stylesheet located in the same src folder
         try {
             String cssPath = getClass().getResource("/styles.css").toExternalForm();
             scene.getStylesheets().add(cssPath);
@@ -1016,6 +1016,146 @@ public class App extends Application {
 
             assert currentQuestionIndex == 0 : "Assertion Error: reset failed to restore question index to 0";
             assert calculateCurrentScore() == 0 : "Assertion Error: reset failed to clear scores";
+        }
+    }
+
+    // =========================================================================
+    //                        AUTOMATED UNIT TESTS
+    // =========================================================================
+
+    /**
+     * JUnit 5 Unit Tests nested directly within the App class.
+     * Allows complete self-contained testing of modular features.
+     */
+    public static class AppTest {
+        private QuizEngine quizEngine;
+
+        @org.junit.jupiter.api.BeforeEach
+        public void setUp() {
+            quizEngine = new QuizEngine();
+        }
+
+        @org.junit.jupiter.api.Test
+        public void testInitialState() {
+            org.junit.jupiter.api.Assertions.assertEquals("Anonymous", quizEngine.getUserName());
+            org.junit.jupiter.api.Assertions.assertEquals(0, quizEngine.getCurrentQuestionIndex());
+            org.junit.jupiter.api.Assertions.assertEquals(10, quizEngine.getQuestions().size());
+            org.junit.jupiter.api.Assertions.assertEquals(0, quizEngine.calculateCurrentScore());
+            org.junit.jupiter.api.Assertions.assertEquals(0, quizEngine.getAnsweredCount());
+        }
+
+        @org.junit.jupiter.api.Test
+        public void testUserNameValidation() {
+            quizEngine.setUserName("  Alice Smith  ");
+            org.junit.jupiter.api.Assertions.assertEquals("Alice Smith", quizEngine.getUserName());
+
+            org.junit.jupiter.api.Assertions.assertThrows(NullPointerException.class, () -> {
+                quizEngine.setUserName(null);
+            });
+
+            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                quizEngine.setUserName("");
+            });
+
+            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                quizEngine.setUserName("   ");
+            });
+        }
+
+        @org.junit.jupiter.api.Test
+        public void testNavigationBounds() {
+            org.junit.jupiter.api.Assertions.assertEquals(0, quizEngine.getCurrentQuestionIndex());
+
+            org.junit.jupiter.api.Assertions.assertFalse(quizEngine.previousQuestion());
+            org.junit.jupiter.api.Assertions.assertEquals(0, quizEngine.getCurrentQuestionIndex());
+
+            org.junit.jupiter.api.Assertions.assertTrue(quizEngine.nextQuestion());
+            org.junit.jupiter.api.Assertions.assertEquals(1, quizEngine.getCurrentQuestionIndex());
+
+            quizEngine.setCurrentQuestionIndex(9);
+            org.junit.jupiter.api.Assertions.assertEquals(9, quizEngine.getCurrentQuestionIndex());
+
+            org.junit.jupiter.api.Assertions.assertFalse(quizEngine.nextQuestion());
+            org.junit.jupiter.api.Assertions.assertEquals(9, quizEngine.getCurrentQuestionIndex());
+
+            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                quizEngine.setCurrentQuestionIndex(-1);
+            });
+
+            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                quizEngine.setCurrentQuestionIndex(10);
+            });
+        }
+
+        @org.junit.jupiter.api.Test
+        public void testAnswerRegistration() {
+            quizEngine.selectAnswer(0, 3);
+            org.junit.jupiter.api.Assertions.assertTrue(quizEngine.getQuestions().get(0).isAnswered());
+            org.junit.jupiter.api.Assertions.assertTrue(quizEngine.getQuestions().get(0).isCorrect());
+            org.junit.jupiter.api.Assertions.assertEquals(1, quizEngine.calculateCurrentScore());
+            org.junit.jupiter.api.Assertions.assertEquals(1, quizEngine.getAnsweredCount());
+
+            quizEngine.selectAnswer(1, 1);
+            org.junit.jupiter.api.Assertions.assertTrue(quizEngine.getQuestions().get(1).isAnswered());
+            org.junit.jupiter.api.Assertions.assertFalse(quizEngine.getQuestions().get(1).isCorrect());
+            org.junit.jupiter.api.Assertions.assertEquals(1, quizEngine.calculateCurrentScore());
+            org.junit.jupiter.api.Assertions.assertEquals(2, quizEngine.getAnsweredCount());
+
+            org.junit.jupiter.api.Assertions.assertThrows(IndexOutOfBoundsException.class, () -> {
+                quizEngine.selectAnswer(-1, 0);
+            });
+
+            org.junit.jupiter.api.Assertions.assertThrows(IndexOutOfBoundsException.class, () -> {
+                quizEngine.selectAnswer(10, 0);
+            });
+
+            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                quizEngine.selectAnswer(0, -1);
+            });
+
+            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                quizEngine.selectAnswer(0, 4);
+            });
+        }
+
+        @org.junit.jupiter.api.Test
+        public void testGradingMapping() {
+            org.junit.jupiter.api.Assertions.assertEquals(Grade.A, Grade.fromScore(10));
+            org.junit.jupiter.api.Assertions.assertEquals(Grade.A, Grade.fromScore(7));
+
+            org.junit.jupiter.api.Assertions.assertEquals(Grade.B, Grade.fromScore(6));
+            org.junit.jupiter.api.Assertions.assertEquals(Grade.C, Grade.fromScore(5));
+            org.junit.jupiter.api.Assertions.assertEquals(Grade.D, Grade.fromScore(4));
+            org.junit.jupiter.api.Assertions.assertEquals(Grade.E, Grade.fromScore(3));
+
+            org.junit.jupiter.api.Assertions.assertEquals(Grade.F, Grade.fromScore(2));
+            org.junit.jupiter.api.Assertions.assertEquals(Grade.F, Grade.fromScore(1));
+            org.junit.jupiter.api.Assertions.assertEquals(Grade.F, Grade.fromScore(0));
+
+            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                Grade.fromScore(-1);
+            });
+            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                Grade.fromScore(11);
+            });
+        }
+
+        @org.junit.jupiter.api.Test
+        public void testResetState() {
+            quizEngine.setUserName("Alice");
+            quizEngine.selectAnswer(0, 3);
+            quizEngine.selectAnswer(1, 1);
+            quizEngine.setCurrentQuestionIndex(5);
+
+            quizEngine.reset();
+
+            org.junit.jupiter.api.Assertions.assertEquals("Anonymous", quizEngine.getUserName());
+            org.junit.jupiter.api.Assertions.assertEquals(0, quizEngine.getCurrentQuestionIndex());
+            org.junit.jupiter.api.Assertions.assertEquals(0, quizEngine.calculateCurrentScore());
+            org.junit.jupiter.api.Assertions.assertEquals(0, quizEngine.getAnsweredCount());
+            for (Question q : quizEngine.getQuestions()) {
+                org.junit.jupiter.api.Assertions.assertFalse(q.isAnswered());
+            }
         }
     }
 }

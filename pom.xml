@@ -22,7 +22,7 @@
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
         </dependency>
-        <!-- JavaFX FXML dependency (if needed) -->
+        <!-- JavaFX FXML dependency -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
@@ -33,18 +33,30 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <version>${junit.version}</version>
-            <scope>test</scope>
         </dependency>
         <!-- JUnit Jupiter Engine to run the tests -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>${junit.version}</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
+        <!-- Set the source directory flatly to src -->
+        <sourceDirectory>src</sourceDirectory>
+        <testSourceDirectory>src</testSourceDirectory>
+
+        <!-- Package CSS resources directly from the flat src folder -->
+        <resources>
+            <resource>
+                <directory>src</directory>
+                <includes>
+                    <include>**/*.css</include>
+                </includes>
+            </resource>
+        </resources>
+
         <plugins>
             <!-- Compiler plugin configured for Java 21 -->
             <plugin>
@@ -56,7 +68,7 @@
                 </configuration>
             </plugin>
             
-            <!-- JavaFX Maven Plugin for running the App -->
+            <!-- JavaFX Maven Plugin configured to launch the default App class -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
@@ -65,8 +77,20 @@
                     <mainClass>App</mainClass>
                 </configuration>
             </plugin>
+
+            <!-- Surefire Test Plugin configured to execute tests nested in App.java -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.4</version>
+                <configuration>
+                    <includes>
+                        <include>App$AppTest</include>
+                    </includes>
+                </configuration>
+            </plugin>
             
-            <!-- Javadoc plugin for generating rich documentation specifications -->
+            <!-- Javadoc plugin for generating documentation specifications -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
