@@ -21,8 +21,8 @@ import java.util.Optional;
  * Main entrypoint, UI coordinator, and domain container for the Quiz Application.
  * This class houses the JavaFX UI layout systems, screen-switching methods,
  * nested modular classes (Question, Grade, QuizEngine), and even the complete
- * automated Junit test suite (AppTest) to ensure the entire application can be
- * maintained, compiled, and tested as a single flat source file.
+ * native automated test suite (AppTest) to ensure the entire application can be
+ * compiled, tested, and run as a single file without any external dependencies.
  *
  * @author Group 2
  * @version 1.0
@@ -141,9 +141,20 @@ public class App extends Application {
 
         inputSection.getChildren().addAll(inputLabel, nameField, errorLabel);
 
+        // Action buttons row
+        HBox welcomeActionRow = new HBox(12);
+        welcomeActionRow.setAlignment(Pos.CENTER);
+
         Button startButton = new Button("START ASSESSMENT");
         startButton.getStyleClass().add("btn-primary");
-        startButton.setPrefWidth(280);
+        startButton.setPrefWidth(220);
+
+        Button testDiagnosticButton = new Button("RUN TESTS");
+        testDiagnosticButton.getStyleClass().add("btn-secondary");
+        testDiagnosticButton.setStyle("-fx-text-fill: #10b981; -fx-border-color: rgba(16, 185, 129, 0.4);");
+        testDiagnosticButton.setPrefWidth(120);
+
+        welcomeActionRow.getChildren().addAll(startButton, testDiagnosticButton);
 
         startButton.setOnAction(e -> {
             String inputName = nameField.getText();
@@ -163,7 +174,21 @@ public class App extends Application {
             }
         });
 
-        card.getChildren().addAll(logoText, groupLabel, infoPanel, inputSection, startButton);
+        // Setup visual interactive diagnostics run
+        testDiagnosticButton.setOnAction(e -> {
+            try {
+                AppTest.runAllTests();
+                Alert successDialog = new Alert(Alert.AlertType.INFORMATION);
+                successDialog.setTitle("Diagnostics Passed");
+                successDialog.setHeaderText("Test Execution Successful");
+                successDialog.setContentText("✓ All 6 automated modular diagnostic tests passed successfully! Check the terminal console output for details.");
+                successDialog.showAndWait();
+            } catch (Exception ex) {
+                showErrorDialog("Tests Failed", ex.getMessage());
+            }
+        });
+
+        card.getChildren().addAll(logoText, groupLabel, infoPanel, inputSection, welcomeActionRow);
         layout.getChildren().add(card);
 
         setContainerView(layout);
@@ -658,11 +683,15 @@ public class App extends Application {
     }
 
     /**
-     * Helper entry launcher method.
+     * Helper entry launcher method. Supports a CLI test execution argument flag.
      *
      * @param args runtime execution arguments
      */
     public static void main(String[] args) {
+        if (args.length > 0 && (args[0].equalsIgnoreCase("-test") || args[0].equalsIgnoreCase("--test"))) {
+            AppTest.runAllTests();
+            System.exit(0);
+        }
         launch(args);
     }
 
@@ -1020,127 +1049,175 @@ public class App extends Application {
     }
 
     // =========================================================================
-    //                        AUTOMATED UNIT TESTS
+    //                    AUTOMATED NATIVE UNIT TESTS (ZERO DEPENDENCY)
     // =========================================================================
 
     /**
-     * JUnit 5 Unit Tests nested directly within the App class.
-     * Allows complete self-contained testing of modular features.
+     * Automated native diagnostic unit test suite. Runs directly using standard Java
+     * Assertions without requiring any external libraries (like JUnit) to be on the classpath.
      */
     public static class AppTest {
+        
+        /**
+         * Executes all 6 modular diagnostic test cases.
+         *
+         * @throws RuntimeException if any validation assertion fails
+         */
+        public static void runAllTests() {
+            System.out.println("\n========================================================");
+            System.out.println("  STARTING AUTOMATED NATIVE ASSESSMENT DIAGNOSTICS      ");
+            System.out.println("========================================================");
+            try {
+                AppTest suite = new AppTest();
+                
+                System.out.print("Running testInitialState()................. ");
+                suite.setUp();
+                suite.testInitialState();
+                System.out.println("[ PASSED ]");
+                
+                System.out.print("Running testUserNameValidation()............ ");
+                suite.setUp();
+                suite.testUserNameValidation();
+                System.out.println("[ PASSED ]");
+                
+                System.out.print("Running testNavigationBounds()............. ");
+                suite.setUp();
+                suite.testNavigationBounds();
+                System.out.println("[ PASSED ]");
+                
+                System.out.print("Running testAnswerRegistration()........... ");
+                suite.setUp();
+                suite.testAnswerRegistration();
+                System.out.println("[ PASSED ]");
+                
+                System.out.print("Running testGradingMapping()............... ");
+                suite.setUp();
+                suite.testGradingMapping();
+                System.out.println("[ PASSED ]");
+                
+                System.out.print("Running testResetState()................... ");
+                suite.setUp();
+                suite.testResetState();
+                System.out.println("[ PASSED ]");
+                
+                System.out.println("========================================================");
+                System.out.println("  SUCCESS: ALL 6 DIAGNOSTIC TEST CASES COMPLETED        ");
+                System.out.println("========================================================");
+            } catch (Throwable t) {
+                System.err.println("\n!!! DIAGNOSTIC VERIFICATION FAILED !!!");
+                System.err.println("Failure reason: " + t.getMessage());
+                System.err.println("Stack trace details:");
+                t.printStackTrace();
+                throw new RuntimeException("Assertion verification aborted. Logic check failed!", t);
+            }
+        }
+
         private QuizEngine quizEngine;
 
-        @org.junit.jupiter.api.BeforeEach
         public void setUp() {
-            quizEngine = new QuizEngine();
+            this.quizEngine = new QuizEngine();
         }
 
-        @org.junit.jupiter.api.Test
         public void testInitialState() {
-            org.junit.jupiter.api.Assertions.assertEquals("Anonymous", quizEngine.getUserName());
-            org.junit.jupiter.api.Assertions.assertEquals(0, quizEngine.getCurrentQuestionIndex());
-            org.junit.jupiter.api.Assertions.assertEquals(10, quizEngine.getQuestions().size());
-            org.junit.jupiter.api.Assertions.assertEquals(0, quizEngine.calculateCurrentScore());
-            org.junit.jupiter.api.Assertions.assertEquals(0, quizEngine.getAnsweredCount());
+            assertEquals("Anonymous", quizEngine.getUserName());
+            assertEquals(0, quizEngine.getCurrentQuestionIndex());
+            assertEquals(10, quizEngine.getQuestions().size());
+            assertEquals(0, quizEngine.calculateCurrentScore());
+            assertEquals(0, quizEngine.getAnsweredCount());
         }
 
-        @org.junit.jupiter.api.Test
         public void testUserNameValidation() {
             quizEngine.setUserName("  Alice Smith  ");
-            org.junit.jupiter.api.Assertions.assertEquals("Alice Smith", quizEngine.getUserName());
+            assertEquals("Alice Smith", quizEngine.getUserName());
 
-            org.junit.jupiter.api.Assertions.assertThrows(NullPointerException.class, () -> {
+            assertThrows(NullPointerException.class, () -> {
                 quizEngine.setUserName(null);
             });
 
-            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            assertThrows(IllegalArgumentException.class, () -> {
                 quizEngine.setUserName("");
             });
 
-            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            assertThrows(IllegalArgumentException.class, () -> {
                 quizEngine.setUserName("   ");
             });
         }
 
-        @org.junit.jupiter.api.Test
         public void testNavigationBounds() {
-            org.junit.jupiter.api.Assertions.assertEquals(0, quizEngine.getCurrentQuestionIndex());
+            assertEquals(0, quizEngine.getCurrentQuestionIndex());
 
-            org.junit.jupiter.api.Assertions.assertFalse(quizEngine.previousQuestion());
-            org.junit.jupiter.api.Assertions.assertEquals(0, quizEngine.getCurrentQuestionIndex());
+            assertFalse(quizEngine.previousQuestion());
+            assertEquals(0, quizEngine.getCurrentQuestionIndex());
 
-            org.junit.jupiter.api.Assertions.assertTrue(quizEngine.nextQuestion());
-            org.junit.jupiter.api.Assertions.assertEquals(1, quizEngine.getCurrentQuestionIndex());
+            assertTrue(quizEngine.nextQuestion());
+            assertEquals(1, quizEngine.getCurrentQuestionIndex());
 
             quizEngine.setCurrentQuestionIndex(9);
-            org.junit.jupiter.api.Assertions.assertEquals(9, quizEngine.getCurrentQuestionIndex());
+            assertEquals(9, quizEngine.getCurrentQuestionIndex());
 
-            org.junit.jupiter.api.Assertions.assertFalse(quizEngine.nextQuestion());
-            org.junit.jupiter.api.Assertions.assertEquals(9, quizEngine.getCurrentQuestionIndex());
+            assertFalse(quizEngine.nextQuestion());
+            assertEquals(9, quizEngine.getCurrentQuestionIndex());
 
-            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            assertThrows(IllegalArgumentException.class, () -> {
                 quizEngine.setCurrentQuestionIndex(-1);
             });
 
-            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            assertThrows(IllegalArgumentException.class, () -> {
                 quizEngine.setCurrentQuestionIndex(10);
             });
         }
 
-        @org.junit.jupiter.api.Test
         public void testAnswerRegistration() {
             quizEngine.selectAnswer(0, 3);
-            org.junit.jupiter.api.Assertions.assertTrue(quizEngine.getQuestions().get(0).isAnswered());
-            org.junit.jupiter.api.Assertions.assertTrue(quizEngine.getQuestions().get(0).isCorrect());
-            org.junit.jupiter.api.Assertions.assertEquals(1, quizEngine.calculateCurrentScore());
-            org.junit.jupiter.api.Assertions.assertEquals(1, quizEngine.getAnsweredCount());
+            assertTrue(quizEngine.getQuestions().get(0).isAnswered());
+            assertTrue(quizEngine.getQuestions().get(0).isCorrect());
+            assertEquals(1, quizEngine.calculateCurrentScore());
+            assertEquals(1, quizEngine.getAnsweredCount());
 
             quizEngine.selectAnswer(1, 1);
-            org.junit.jupiter.api.Assertions.assertTrue(quizEngine.getQuestions().get(1).isAnswered());
-            org.junit.jupiter.api.Assertions.assertFalse(quizEngine.getQuestions().get(1).isCorrect());
-            org.junit.jupiter.api.Assertions.assertEquals(1, quizEngine.calculateCurrentScore());
-            org.junit.jupiter.api.Assertions.assertEquals(2, quizEngine.getAnsweredCount());
+            assertTrue(quizEngine.getQuestions().get(1).isAnswered());
+            assertFalse(quizEngine.getQuestions().get(1).isCorrect());
+            assertEquals(1, quizEngine.calculateCurrentScore());
+            assertEquals(2, quizEngine.getAnsweredCount());
 
-            org.junit.jupiter.api.Assertions.assertThrows(IndexOutOfBoundsException.class, () -> {
+            assertThrows(IndexOutOfBoundsException.class, () -> {
                 quizEngine.selectAnswer(-1, 0);
             });
 
-            org.junit.jupiter.api.Assertions.assertThrows(IndexOutOfBoundsException.class, () -> {
+            assertThrows(IndexOutOfBoundsException.class, () -> {
                 quizEngine.selectAnswer(10, 0);
             });
 
-            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            assertThrows(IllegalArgumentException.class, () -> {
                 quizEngine.selectAnswer(0, -1);
             });
 
-            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            assertThrows(IllegalArgumentException.class, () -> {
                 quizEngine.selectAnswer(0, 4);
             });
         }
 
-        @org.junit.jupiter.api.Test
         public void testGradingMapping() {
-            org.junit.jupiter.api.Assertions.assertEquals(Grade.A, Grade.fromScore(10));
-            org.junit.jupiter.api.Assertions.assertEquals(Grade.A, Grade.fromScore(7));
+            assertEquals(Grade.A, Grade.fromScore(10));
+            assertEquals(Grade.A, Grade.fromScore(7));
 
-            org.junit.jupiter.api.Assertions.assertEquals(Grade.B, Grade.fromScore(6));
-            org.junit.jupiter.api.Assertions.assertEquals(Grade.C, Grade.fromScore(5));
-            org.junit.jupiter.api.Assertions.assertEquals(Grade.D, Grade.fromScore(4));
-            org.junit.jupiter.api.Assertions.assertEquals(Grade.E, Grade.fromScore(3));
+            assertEquals(Grade.B, Grade.fromScore(6));
+            assertEquals(Grade.C, Grade.fromScore(5));
+            assertEquals(Grade.D, Grade.fromScore(4));
+            assertEquals(Grade.E, Grade.fromScore(3));
 
-            org.junit.jupiter.api.Assertions.assertEquals(Grade.F, Grade.fromScore(2));
-            org.junit.jupiter.api.Assertions.assertEquals(Grade.F, Grade.fromScore(1));
-            org.junit.jupiter.api.Assertions.assertEquals(Grade.F, Grade.fromScore(0));
+            assertEquals(Grade.F, Grade.fromScore(2));
+            assertEquals(Grade.F, Grade.fromScore(1));
+            assertEquals(Grade.F, Grade.fromScore(0));
 
-            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            assertThrows(IllegalArgumentException.class, () -> {
                 Grade.fromScore(-1);
             });
-            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            assertThrows(IllegalArgumentException.class, () -> {
                 Grade.fromScore(11);
             });
         }
 
-        @org.junit.jupiter.api.Test
         public void testResetState() {
             quizEngine.setUserName("Alice");
             quizEngine.selectAnswer(0, 3);
@@ -1149,12 +1226,44 @@ public class App extends Application {
 
             quizEngine.reset();
 
-            org.junit.jupiter.api.Assertions.assertEquals("Anonymous", quizEngine.getUserName());
-            org.junit.jupiter.api.Assertions.assertEquals(0, quizEngine.getCurrentQuestionIndex());
-            org.junit.jupiter.api.Assertions.assertEquals(0, quizEngine.calculateCurrentScore());
-            org.junit.jupiter.api.Assertions.assertEquals(0, quizEngine.getAnsweredCount());
+            assertEquals("Anonymous", quizEngine.getUserName());
+            assertEquals(0, quizEngine.getCurrentQuestionIndex());
+            assertEquals(0, quizEngine.calculateCurrentScore());
+            assertEquals(0, quizEngine.getAnsweredCount());
             for (Question q : quizEngine.getQuestions()) {
-                org.junit.jupiter.api.Assertions.assertFalse(q.isAnswered());
+                assertFalse(q.isAnswered());
+            }
+        }
+
+        // ==========================================
+        //         CUSTOM ASSERTION HELPERS
+        // ==========================================
+        private static void assertEquals(Object expected, Object actual) {
+            if (!java.util.Objects.equals(expected, actual)) {
+                throw new AssertionError("Assertion Failed: Expected '" + expected + "' but got '" + actual + "'");
+            }
+        }
+
+        private static void assertTrue(boolean condition) {
+            if (!condition) {
+                throw new AssertionError("Assertion Failed: Expected 'true' but got 'false'");
+            }
+        }
+
+        private static void assertFalse(boolean condition) {
+            if (condition) {
+                throw new AssertionError("Assertion Failed: Expected 'false' but got 'true'");
+            }
+        }
+
+        private static void assertThrows(Class<? extends Throwable> expectedException, Runnable runnable) {
+            try {
+                runnable.run();
+                throw new AssertionError("Assertion Failed: Expected exception " + expectedException.getName() + " was not thrown.");
+            } catch (Throwable t) {
+                if (!expectedException.isInstance(t)) {
+                    throw new AssertionError("Assertion Failed: Expected exception " + expectedException.getName() + " but got " + t.getClass().getName());
+                }
             }
         }
     }
