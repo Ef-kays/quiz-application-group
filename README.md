@@ -9,11 +9,12 @@
 | # | Student Full Name | Registration Number | Role / Contribution |
 |---|-------------------|---------------------|----------------------|
 | 1 | **Abubakar Ismail** | `CIS/STE/23/1011` | Lead Logic Engineer / QA |
-| 2 | **Nasir Saminu Muktar** | `CIS/STE/23/1014` | Lead GUI Layout Developer |
-| 3 | **Ahmad Jibril** | `CIS/STE/23/1015` | JavaFX Component Designer |
-| 4 | **Abdulhakeem Yushau** | `CIS/STE/23/1018` | Specifications Analyst |
-| 5 | **Usman Iliyasu** | `CIS/STE/23/1019` | UI Theme & CSS Specialist |
-| 6 | **Imran Muhammad** | `CIS/STE/23/1020` | Native Diagnostic Systems |
+| 2 | **Nasir Aminu Musa** | `CIS/STE/23/1013` | Technical Documentation Analyst |
+| 3 | **Nasir Saminu Muktar** | `CIS/STE/23/1014` | Lead GUI Layout Developer |
+| 4 | **Ahmad Jibril** | `CIS/STE/23/1015` | JavaFX Component Designer |
+| 5 | **Abdulhakeem Yushau** | `CIS/STE/23/1018` | Specifications Analyst |
+| 6 | **Usman Iliyasu** | `CIS/STE/23/1019` | UI Theme & CSS Specialist |
+| 7 | **Imran Muhammad** | `CIS/STE/23/1020` | Native Diagnostic Systems |
 
 ---
 
